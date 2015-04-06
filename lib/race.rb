@@ -3,16 +3,18 @@ require 'mechanize'
 require 'nokogiri'
 require 'open-uri'
 require 'require_all'
-require_all 'lib/state.rb'
+require_all 'lib/constants.rb'
 
 class Race
+  RESULT_LIMIT = 500
+
   def initialize(state)
     @state = state
     @state_races = []
   end
 
-  def get_races(page=1)
-    puts "Getting races for #{@state.light_red}. Loading page #{page.to_s.cyan}..."
+  def get_races!(page=1)
+    puts "Getting races for #{@state.green}. Loading page #{page.to_s.cyan}..."
     url = "http://www.runningintheusa.com/Race/List.aspx?Rank=Upcoming&State=#{@state}&Page=#{page}"
     doc = Nokogiri::HTML(open(url))
 
@@ -37,26 +39,33 @@ class Race
     end
 
     @state_races.concat(state_race_results)
-    puts "`- Done getting races for #{@state.light_red} - page #{page.to_s.cyan}"
+    puts "`- Done getting races for #{@state.green} - page #{page.to_s.cyan}"
 
     state_race_status = doc.css('#ctl00_MainContent_List1_tdIndexRange').first.content.gsub(/^[0-9]+ to /, '').split(' of ')
     state_race_count  = state_race_status[0].to_i
     state_race_total  = state_race_status[1].to_i
+    result_limit      = set_search_result_limit(state_race_total)
 
-    if state_race_count < state_race_total
-      get_races(page + 1)
+    if state_race_count < result_limit
+      get_races!(page + 1)
     else
       puts @state_races
       puts "DONE GETTING #{@state} RACES".green
     end
   end
 
-  def self.get_all_races
-    @all_states = []
+  def self.get_all_races!
+    @all_state_races = []
     State::STATES.each do |state|
       race = Race.new(state)
-      race.get_races
-      @all_states << race
+      race.get_races!
+      @all_state_races << race
     end
+  end
+
+private
+
+  def set_search_result_limit(result_count)
+    result_count < RESULT_LIMIT ? result_count : RESULT_LIMIT
   end
 end
