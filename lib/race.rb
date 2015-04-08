@@ -19,8 +19,15 @@ class Race
     doc = Nokogiri::HTML(open(url))
 
     state_race_results = doc.css('tr.MenuGridViewRow, tr.MenuGridViewAlternatingRow').map do |row|
-      formatted_row = row.css('td').map do |cell|
-          cell.content.strip.split(/\n/).map { |entry| entry.strip }
+      formatted_row = row.css('td').each_with_index.map do |cell, idx|
+        # For the 5th column, get the "listing info" link.
+        if idx == 4
+          next cell.css('a')
+            .select { |entry| entry.content.strip == 'listing info' }
+            .map { |link| link['href'] }
+        end
+
+        cell.content.strip.split(/\n/).map { |entry| entry.strip }
       end
 
       location       = formatted_row[3][0].split(', ')
@@ -29,6 +36,7 @@ class Race
 
       next {
         'race_number' => formatted_row[0].first,
+        'race_id'     => formatted_row[4].first.split(/raceid=/i).last,
         'race_date'   => Date.parse(formatted_row[1][1]),
         'race_name'   => formatted_row[2][0],
         'race_dist'   => race_data_hash,
