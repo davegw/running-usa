@@ -6,11 +6,14 @@ class Race
 
   def initialize(race_data)
     @data = race_data
+    save
   end
 
   def save
     Database['races'].update(
-      { 'race_id' => data['race_id'] }, data, { 'upsert'  => true }
+      { 'state' => data['state'], 'race_id' => data['race_id'] },
+      data,
+      { :upsert  => true }
     )
   end
 end

@@ -31,18 +31,18 @@ class StateRace
       end
 
       location       = formatted_row[3][0].split(', ')
-      race_data      = formatted_row[2][1].gsub(/(, )|( \| )/, 'HACK').split('HACK')
-      race_data_hash = race_data.reduce({}) { |hash, dist| hash[dist] = true; hash }
+      race_distances = formatted_row[2][1].gsub(/(, )|( \| )/, 'HACK').split('HACK')
+      race_date      = Date.parse(formatted_row[1][1])
 
       next Race.new({
-        'race_number' => formatted_row[0].first,
-        'race_id'     => formatted_row[4].first.split(/raceid=/i).last,
-        'race_date'   => Date.parse(formatted_row[1][1]),
-        'race_name'   => formatted_row[2][0],
-        'race_dist'   => race_data_hash,
-        'race_city'   => location[0],
-        'race_state'  => location[1],
-        'race_county' => formatted_row[3][1]
+        'race_number'    => formatted_row[0].first,
+        'race_id'        => formatted_row[4].first.split(/raceid=/i).last,
+        'race_date'      => Time.utc(race_date.year, race_date.month, race_date.day),
+        'race_name'      => formatted_row[2][0],
+        'race_distances' => race_distances,
+        'race_city'      => location[0],
+        'race_state'     => location[1],
+        'race_county'    => formatted_row[3][1]
       })
     end
 
